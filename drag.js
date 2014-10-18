@@ -71,7 +71,58 @@ module.exports = function (window) {
     require('window-ext')(window);
 
     DD = {
+        /**
+         * Objecthash containing all specific information about the particular drag-cycle.
+         * It has a structure like this:
+         *
+         * ddProps = {
+         *     dragNode {HtmlElement} Element that is dragged
+         *     x {Number} absolute x-position of the draggable inside `document` when the drag starts
+         *     y {Number} absolute y-position of the draggable inside `document` when the drag starts
+         *     inlineLeft {String} inline css of the property `left` when drag starts
+         *     inlineTop {String} inline css of the property `top` when drag starts
+         *     winConstrained {Boolean} whether the draggable should be constrained to `window`
+         *     xMouseLast {Number} absolute x-position of the mouse inside `document` when the drag starts
+         *     yMouseLast {Number} absolute y-position of the draggable inside `document` when the drag starts
+         *     winScrollLeft {Number} the left-scroll of window when drag starts
+         *     winScrollTop {Number} the top-scroll of window when drag starts
+         *     constrain = { // constrain-properties when constrained to a HtmlElement
+         *         xOrig {Number} x-position in the document, included with left-border-width
+         *         yOrig {Number} y-position in the document, included with top-border-width
+         *         x {Number} xOrig corrected with scroll-left of the constrained node
+         *         y {Number} yOrig corrected with scroll-top of the constrained node
+         *         w {Number} scrollWidth
+         *         h {Number} scrollHeight
+         *     };
+         *     relatives[{ // Array with objects that represent all draggables that come along with the master-draggable (in case of multiple items), excluded the master draggable itself
+         *         sourceNode {HtmlElement} original node (defined by drag-drop)
+         *         dragNode {HtmlElement} draggable node
+         *         shiftX {Number} the amount of left-pixels that this HtmlElement differs from the dragged element
+         *         shiftY {Number} the amount of top-pixels that this HtmlElement differs from the dragged element
+         *         inlineLeft {String} inline css of the property `left` when drag starts
+         *         inlineTop {String} inline css of the property `top` when drag starts
+         *     }]
+         * }
+         *
+         * @property ddProps
+         * @default {}
+         * @type Object
+         * @since 0.0.1
+        */
        ddProps: {},
+
+        /**
+         * Internal hash with notifiers to response after each `Drag` event is set up, or teared down.
+         * You can use this to hook in into the drag-eventcycle: the `drop`-module uses it this way.
+         * Is filled by using `notify()`.
+         *
+         * @property _notifiers
+         * @default []
+         * @type Array
+         * @private
+         * @since 0.0.1
+         */
+        _notifiers: [],
 
         /**
         * Default function for the `*:dd-drag`-event
@@ -368,17 +419,6 @@ module.exports = function (window) {
         },
 
         /**
-         * Internal hash with notifiers to response after each `Drag` event is set up, or teared down.
-         * You can use this to hook in into the drag-eventcycle: the `drop`-module uses it this way.
-         * Is filled by using `notify()`.
-         *
-         * @property _notifiers
-         * @private
-         * @since 0.0.1
-         */
-        _notifiers: [],
-
-        /**
          * Prevented function for the `*:dd-start`-event
          *
          * @method _prevFnStart
@@ -557,7 +597,7 @@ module.exports = function (window) {
         function (config) {
             var instance = this;
             config || (config={});
-            instance[DD_MINUSDRAGGABLE] = true;
+            instance[DD_MINUSDRAGGABLE] = config.draggable || true;
             instance[DD_MINUS+DROPZONE] = config.dropzone;
             instance[CONSTRAIN_ATTR] = config.constrain;
             instance[DD_EMITTER] = config.emitter;
