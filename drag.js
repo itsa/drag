@@ -58,8 +58,7 @@ var NAME = '[drag]: ',
     DD_MINUSDRAGGABLE = DD_MINUS+DRAGGABLE,
     PLUGIN_ATTRS = [DD_MINUS+DROPZONE, CONSTRAIN_ATTR, DD_EMITTER, DD_HANDLE, DD_EFFECT_ALLOWED, DD_DROPZONE_MOVABLE];
 
-require('polyfill/polyfill-base.js');
-require('polyfill/lib/promise.js');
+require('polyfill');
 require('js-ext');
 require('./css/drag.css');
 
@@ -223,7 +222,6 @@ module.exports = function (window) {
         _defFnStart: function(e) {
             var instance = this,
                 customEvent;
-            e.emitter = (e.emitter!==UI) ? e.emitter : (e.target.getAttr(DD_EMITTER) || UI),
             customEvent = e.emitter + ':'+DD_DRAG;
             console.log(NAME, '_defFnStart: default function UI:dd-start. Defining customEvent '+customEvent);
             Event.defineEvent(customEvent).defaultFn(instance._defFnDrag.bind(instance));
@@ -483,13 +481,17 @@ module.exports = function (window) {
                 // store the orriginal mouseposition:
                 e.xMouseOrigin = e.clientX + window.getScrollLeft();
                 e.yMouseOrigin = e.clientY + window.getScrollTop();
+
+                //set the emitterName:
+                e.emitter = e.target.getAttr(DD_EMITTER) || UI,
+
                 // now we can start the eventcycle by emitting UI:dd:
                 /**
                 * Emitted when a draggable Element's drag-cycle starts. You can use a `before`-subscriber to specify
                 * e.relatives, which should be a nodelist with HtmlElements, that should be dragged togehter with the master
                 * draggable Element.
                 *
-                * @event dd
+                * @event *:dd
                 * @param e {Object} eventobject including:
                 * @param e.target {HtmlElement} the HtmlElement that is being dragged
                 * @param e.currentTarget {HtmlElement} the HtmlElement that is delegating
