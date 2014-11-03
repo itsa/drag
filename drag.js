@@ -161,12 +161,12 @@ module.exports = function (window) {
             else {
                 console.log(NAME, '_defFnDrag: dragging:');
                 if (constrainNode) {
-                    ddProps.constrain.x = ddProps.constrain.xOrig - constrainNode.getScrollLeft();
-                    ddProps.constrain.y = ddProps.constrain.yOrig - constrainNode.getScrollTop();
+                    ddProps.constrain.x = ddProps.constrain.xOrig - constrainNode.scrollLeft;
+                    ddProps.constrain.y = ddProps.constrain.yOrig - constrainNode.scrollTop;
                 }
 
-                x = ddProps.x+e.xMouse+(winConstrained ? ddProps.winScrollLeft : window.getScrollLeft())-e.xMouseOrigin;
-                y = ddProps.y+e.yMouse+(winConstrained ? ddProps.winScrollTop : window.getScrollTop())-e.yMouseOrigin;
+                x = ddProps.x+e.xMouse+(winConstrained ? ddProps.winScrollLeft : window.scrollLeft)-e.xMouseOrigin;
+                y = ddProps.y+e.yMouse+(winConstrained ? ddProps.winScrollTop : window.scrollTop)-e.yMouseOrigin;
 
                 dragNode.setXY(x, y, ddProps.constrain, true);
 
@@ -267,8 +267,8 @@ module.exports = function (window) {
 
             // define ddProps --> internal object with data about the draggable instance
             ddProps.dragNode = dragNode;
-            ddProps.x = x = dragNode.getX();
-            ddProps.y = y = dragNode.getY();
+            ddProps.x = x = dragNode.left;
+            ddProps.y = y = dragNode.top;
             ddProps.inlineLeft = inlineLeft = dragNode.getInlineStyle(LEFT);
             ddProps.inlineTop = inlineTop = dragNode.getInlineStyle(TOP);
             ddProps.winConstrained = winConstrained = (constrain===WINDOW);
@@ -277,8 +277,8 @@ module.exports = function (window) {
 
             if (constrain) {
                 if (ddProps.winConstrained) {
-                    ddProps.winScrollLeft = winScrollLeft = window.getScrollLeft();
-                    ddProps.winScrollTop = winScrollTop = window.getScrollTop();
+                    ddProps.winScrollLeft = winScrollLeft = window.scrollLeft;
+                    ddProps.winScrollTop = winScrollTop = window.scrollTop;
                     ddProps.constrain = {
                         x: winScrollLeft,
                         y: winScrollTop,
@@ -294,13 +294,13 @@ module.exports = function (window) {
                         // if there is a match, then make sure x and y fall within the region
                         if (match) {
                             ddProps.constrainNode = constrainNode;
-                            xOrig = constrainNode.getX() + parseInt(constrainNode.getStyle(BORDER_LEFT_WIDTH), 10);
-                            yOrig = constrainNode.getY() + parseInt(constrainNode.getStyle(BORDER_TOP_WIDTH), 10);
+                            xOrig = constrainNode.left + parseInt(constrainNode.getStyle(BORDER_LEFT_WIDTH), 10);
+                            yOrig = constrainNode.top + parseInt(constrainNode.getStyle(BORDER_TOP_WIDTH), 10);
                             ddProps.constrain = {
                                 xOrig: xOrig,
                                 yOrig: yOrig,
-                                x: xOrig - constrainNode.getScrollLeft(),
-                                y: yOrig - constrainNode.getScrollTop(),
+                                x: xOrig - constrainNode.scrollLeft,
+                                y: yOrig - constrainNode.scrollTop,
                                 w: constrainNode.scrollWidth,
                                 h: constrainNode.scrollHeight
                             };
@@ -396,8 +396,8 @@ module.exports = function (window) {
                         if (node !== dragNode) {
                             item = {
                                 dragNode: node,
-                                shiftX: node.getX() - x,
-                                shiftY: node.getY() - y,
+                                shiftX: node.left - x,
+                                shiftY: node.top - y,
                                 inlineLeft: node.getInlineStyle(LEFT),
                                 inlineTop: node.getInlineStyle(TOP)
                             };
@@ -479,8 +479,8 @@ module.exports = function (window) {
                     e.dd.setCallback(callbackFn);
                 };
                 // store the orriginal mouseposition:
-                e.xMouseOrigin = e.clientX + window.getScrollLeft();
-                e.yMouseOrigin = e.clientY + window.getScrollTop();
+                e.xMouseOrigin = e.clientX + window.scrollLeft;
+                e.yMouseOrigin = e.clientY + window.scrollTop;
 
                 //set the emitterName:
                 e.emitter = e.target.getAttr(DD_EMITTER) || UI,
