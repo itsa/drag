@@ -31,7 +31,7 @@
         "polyfill": "itsa/polyfill",
         "utils": "itsa/utils",
         "js-ext": "itsa/js-ext",
-        "dom-ext": "itsa/dom-ext",
+        "vdom": "itsa/vdom",
         "window-ext": "itsa/window-ext"
     },
     "devDependencies": {
