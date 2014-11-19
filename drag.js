@@ -30,14 +30,13 @@ var NAME = '[drag]: ',
     CONSTRAIN_ATTR = 'xy-constrain',
     MOUSE = 'mouse',
     DROPZONE = 'dropzone',
-    NO_TRANS_CLASS = 'el-notrans', // delivered by `dom-ext`
+    NO_TRANS_CLASS = 'el-notrans', // delivered by `vdom`
     HIGH_Z_CLASS = DD_MINUS+'high-z',
     REGEXP_NODE_ID = /^#\S+$/,
     EMITTER = 'emitter',
     DD_EMITTER = DD_MINUS+EMITTER,
     DD_DRAG = DD_MINUS+DRAG,
     DD_DROP = DD_MINUS+DROP,
-    UI_DD_START = 'UI:dd',
     DD_FAKE = DD_MINUS+'fake-',
     DOWN = 'down',
     UP = 'up',
@@ -63,9 +62,23 @@ require('js-ext');
 require('./css/drag.css');
 
 module.exports = function (window) {
+
+    if (!window._ITSAmodules) {
+        Object.defineProperty(window, '_ITSAmodules', {
+            configurable: false,
+            enumerable: false,
+            writable: false,
+            value: {} // `writable` is false means we cannot chance the value-reference, but we can change {} its members
+        });
+    }
+
+    if (window._ITSAmodules.Drag) {
+        return window._ITSAmodules.Drag; // Drag was already created
+    }
+
     var Event = require('event-dom')(window),
-        NodePlugin = require('dom-ext')(window).Plugins.NodePlugin,
-        DD, NodeDD;
+        NodePlugin = require('vdom')(window).Plugins.NodePlugin,
+        DD, NodeDD, DD_Object;
 
     require('window-ext')(window);
 
@@ -165,14 +178,14 @@ module.exports = function (window) {
                     ddProps.constrain.y = ddProps.constrain.yOrig - constrainNode.scrollTop;
                 }
 
-                x = ddProps.x+e.xMouse+(winConstrained ? ddProps.winScrollLeft : window.scrollLeft)-e.xMouseOrigin;
-                y = ddProps.y+e.yMouse+(winConstrained ? ddProps.winScrollTop : window.scrollTop)-e.yMouseOrigin;
+                x = ddProps.x+e.xMouse+(winConstrained ? ddProps.winScrollLeft : window.getScrollLeft())-e.xMouseOrigin;
+                y = ddProps.y+e.yMouse+(winConstrained ? ddProps.winScrollTop : window.getScrollTop())-e.yMouseOrigin;
 
-                dragNode.setXY(x, y, ddProps.constrain, true);
+                dragNode.setXY(x, y, ddProps.constrain, true, true);
 
                 ddProps.relatives && ddProps.relatives.forEach(
                     function(item) {
-                        item.dragNode.setXY(x+item.shiftX, y+item.shiftY, null, true);
+                        item.dragNode.setXY(x+item.shiftX, y+item.shiftY, null, true, true);
                     }
                 );
 
@@ -212,7 +225,7 @@ module.exports = function (window) {
         },
 
         /**
-         * Default function for the `UI:dd-start`-event
+         * Default function for the `*:dd`-event
          *
          * @method _defFnStart
          * @param e {Object} eventobject
@@ -233,16 +246,16 @@ module.exports = function (window) {
         * Defines the definition of the `dd` event: the first phase of the drag-eventcycle (dd, *:dd-drag, *:dd-drop)
         *
         * @method _defineDDStart
-        * @param e {Object} eventobject
+        * @param emitterName {String} the emitterName, which leads into the definition of event `emitterName:dd`
         * @private
         * @since 0.0.1
         */
-        _defineDDStart: function() {
+        _defineDDStart: function(emitterName) {
             console.log(NAME, '_defineDDStart');
             var instance = this;
             // by using dd before dd-drag, the user can create a `before`-subscriber to dd
             // and define e.emitter and/or e.relatives before going into `dd-drag`
-            Event.defineEvent(UI_DD_START)
+            Event.defineEvent(emitterName+':dd')
                 .defaultFn(instance._defFnStart.bind(instance))
                 .preventedFn(instance._prevFnStart.bind(instance));
         },
@@ -277,8 +290,8 @@ module.exports = function (window) {
 
             if (constrain) {
                 if (ddProps.winConstrained) {
-                    ddProps.winScrollLeft = winScrollLeft = window.scrollLeft;
-                    ddProps.winScrollTop = winScrollTop = window.scrollTop;
+                    ddProps.winScrollLeft = winScrollLeft = window.getScrollLeft();
+                    ddProps.winScrollTop = winScrollTop = window.getScrollTop();
                     ddProps.constrain = {
                         x: winScrollLeft,
                         y: winScrollTop,
@@ -448,7 +461,7 @@ module.exports = function (window) {
 
             nodeTargetFn = function(e) {
                 var node = e.target,
-                    handle, availableHandles, insideHandle;
+                    handle, availableHandles, insideHandle, emitterName;
 
                 // first check if there is a handle to determine if the drag started here:
                 handle = node.getAttr(DD_HANDLE);
@@ -479,13 +492,12 @@ module.exports = function (window) {
                     e.dd.setCallback(callbackFn);
                 };
                 // store the orriginal mouseposition:
-                e.xMouseOrigin = e.clientX + window.scrollLeft;
-                e.yMouseOrigin = e.clientY + window.scrollTop;
+                e.xMouseOrigin = e.clientX + window.getScrollLeft();
+                e.yMouseOrigin = e.clientY + window.getScrollTop();
 
                 //set the emitterName:
-                e.emitter = e.target.getAttr(DD_EMITTER) || UI,
-
-                // now we can start the eventcycle by emitting UI:dd:
+                emitterName = e.target.getAttr(DD_EMITTER) || UI,
+                // now we can start the eventcycle by emitting emitterName:dd:
                 /**
                 * Emitted when a draggable Element's drag-cycle starts. You can use a `before`-subscriber to specify
                 * e.relatives, which should be a nodelist with HtmlElements, that should be dragged togehter with the master
@@ -507,7 +519,8 @@ module.exports = function (window) {
                 *        to inform which nodes are related to the draggable node and should be dragged as well.
                 * @since 0.1
                 */
-                Event.emit(e.target, UI_DD_START, e);
+                instance._defineDDStart(emitterName);
+                Event.emit(e.target, emitterName+':dd', e);
             };
 
             delegatedTargetFn = function(e, cssSelector) {
@@ -557,7 +570,6 @@ module.exports = function (window) {
             console.log(NAME, 'init');
             var instance = this;
             if (!instance._inited) {
-                instance._defineDDStart();
                 instance._setupMouseEv(); // engine behind the dragdrop-eventcycle
                 Event.defineEvent('UI:'+DD_DROP)
                      .defaultFn(instance._defFnDrop.rbind(instance));
@@ -609,10 +621,12 @@ module.exports = function (window) {
         }
     );
 
-    return {
+    DD_Object = window._ITSAmodules.Drag = {
         DD: DD,
         Plugins: {
             NodeDD: NodeDD
         }
     };
+
+    return DD_Object;
 };
