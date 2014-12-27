@@ -181,14 +181,13 @@ module.exports = function (window) {
                 x = ddProps.x+e.xMouse+(winConstrained ? ddProps.winScrollLeft : window.getScrollLeft())-e.xMouseOrigin;
                 y = ddProps.y+e.yMouse+(winConstrained ? ddProps.winScrollTop : window.getScrollTop())-e.yMouseOrigin;
 
-                dragNode.setXY(x, y, ddProps.constrain, true, true);
+                dragNode.setXY(x, y, ddProps.constrain, true);
 
                 ddProps.relatives && ddProps.relatives.forEach(
                     function(item) {
-                        item.dragNode.setXY(x+item.shiftX, y+item.shiftY, null, true, true);
+                        item.dragNode.setXY(x+item.shiftX, y+item.shiftY, null, true);
                     }
                 );
-
                 ddProps.winConstrained || dragNode.forceIntoView(true);
                 constrainNode && dragNode.forceIntoNodeView(constrainNode);
             }
@@ -553,6 +552,16 @@ module.exports = function (window) {
 
             Event.after(MOUSEDOWN, function(e) {
                 var draggableAttr = e.target.getAttr(DD_MINUSDRAGGABLE);
+
+
+// if constrained to window:
+// set a class that makes overflow hidden --> this will prevent
+// some browsers from scrolling the window when a pressed mouse
+// gets out of the window
+//window.document.body.setInlineStyle('overflow', 'hidden');
+
+
+
                 (draggableAttr===TRUE) ? nodeTargetFn(e) : delegatedTargetFn(e, draggableAttr);
             }, '['+DD_MINUSDRAGGABLE+']');
 
