@@ -54,6 +54,7 @@ var NAME = '[drag]: ',
     TOP = 'top',
     WINDOW = 'window',
     TRUE = 'true',
+    NO_OVERFLOW = 'itsa-no-overflow',
     DD_MINUSDRAGGABLE = DD_MINUS+DRAGGABLE,
     PLUGIN_ATTRS = [DD_MINUS+DROPZONE, CONSTRAIN_ATTR, DD_EMITTER, DD_HANDLE, DD_EFFECT_ALLOWED, DD_DROPZONE_MOVABLE];
 
@@ -78,6 +79,7 @@ module.exports = function (window) {
 
     var Event = require('event-dom')(window),
         NodePlugin = require('vdom')(window).Plugins.NodePlugin,
+        bodyNode = window.document.body,
         DD, NodeDD, DD_Object;
 
     require('window-ext')(window);
@@ -297,6 +299,11 @@ module.exports = function (window) {
                         w: window.getWidth(),
                         h: window.getHeight()
                     };
+                    // if constrained to window:
+                    // set a class that makes overflow hidden --> this will prevent
+                    // some browsers from scrolling the window when a pressed mouse
+                    // gets out of the window
+                    bodyNode.setClass(NO_OVERFLOW);
                 }
                 else {
                     byExactId = REGEXP_NODE_ID.test(constrain);
@@ -369,6 +376,13 @@ module.exports = function (window) {
                         notifier.s || notifier.cb.call(notifier.o, e, ddProps);
                     }
                 );
+
+                if (constrain && ddProps.winConstrained) {
+                    // if constrained to window:
+                    // remove overflow=hidden from the bodynode
+                    bodyNode.removeClass(NO_OVERFLOW);
+                }
+
                 instance.ddProps = {};
                 /**
                 * Emitted when drag-cycle of a draggable Element is ended.
@@ -552,16 +566,6 @@ module.exports = function (window) {
 
             Event.after(MOUSEDOWN, function(e) {
                 var draggableAttr = e.target.getAttr(DD_MINUSDRAGGABLE);
-
-
-// if constrained to window:
-// set a class that makes overflow hidden --> this will prevent
-// some browsers from scrolling the window when a pressed mouse
-// gets out of the window
-//window.document.body.setInlineStyle('overflow', 'hidden');
-
-
-
                 (draggableAttr===TRUE) ? nodeTargetFn(e) : delegatedTargetFn(e, draggableAttr);
             }, '['+DD_MINUSDRAGGABLE+']');
 
