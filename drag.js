@@ -40,9 +40,14 @@ var NAME = '[drag]: ',
     DD_FAKE = DD_MINUS+'fake-',
     DOWN = 'down',
     UP = 'up',
+    MOVE = 'move',
     MOUSEUP = MOUSE+UP,
     MOUSEDOWN = MOUSE+DOWN,
-    MOUSEMOVE = MOUSE+'move',
+    MOUSEMOVE = MOUSE+MOVE,
+    PAN = 'pan',
+    PANSTART = PAN+'start',
+    PANMOVE = PAN+MOVE,
+    PANEND = PAN+'end',
     DD_FAKE_MOUSEUP = DD_FAKE+MOUSEUP,
     UI = 'UI',
     DD_EFFECT_ALLOWED = DD_MINUS+'effect-allowed',
@@ -79,7 +84,10 @@ module.exports = function (window) {
 
     var Event = require('event-dom')(window),
         NodePlugin = require('vdom')(window).Plugins.NodePlugin,
+        isMobile = require('useragent')(window).isMobile,
         bodyNode = window.document.body,
+        supportHammer = !!Event.Hammer,
+        mobileEvents = supportHammer && isMobile,
         DD, NodeDD, DD_Object;
 
     require('window-ext')(window);
@@ -332,7 +340,11 @@ module.exports = function (window) {
             }
 
             // create listener for `mousemove` and transform it into the `*:dd:drag`-event
-            moveEv = Event.after(MOUSEMOVE, function(e2) {
+            moveEv = Event.after(mobileEvents ? PANMOVE : MOUSEMOVE, function(e2) {
+                if (typeof e2.center==='object') {
+                    e2.clientX = e2.center.x;
+                    e2.clientY = e2.center.y;
+                }
                 if (!e2.clientX) {
                     return;
                 }
@@ -365,9 +377,13 @@ module.exports = function (window) {
             // prepare dragNode class for the right CSS:
             dragNode.setClass([NO_TRANS_CLASS, HIGH_Z_CLASS, DD_DRAGGING_CLASS]);
 
-            Event.onceAfter([MOUSE+UP, DD_FAKE_MOUSEUP], function(e3) {
+            Event.onceAfter([mobileEvents ? PANEND : MOUSEUP, DD_FAKE_MOUSEUP], function(e3) {
                 moveEv.detach();
                 // set mousepos for the last time:
+                if (typeof e3.center==='object') {
+                    e3.clientX = e3.center.x;
+                    e3.clientY = e3.center.y;
+                }
                 e.xMouse = e3.clientX;
                 e.yMouse = e3.clientY;
                 // invoke all teardown notifiers:
@@ -563,9 +579,12 @@ module.exports = function (window) {
                     nodeTargetFn(e);
                 }
             };
-
-            Event.after(MOUSEDOWN, function(e) {
+            Event.after(mobileEvents ? PANSTART : MOUSEDOWN, function(e) {
                 var draggableAttr = e.target.getAttr(DD_MINUSDRAGGABLE);
+                if (typeof e.center==='object') {
+                    e.clientX = e.center.x;
+                    e.clientY = e.center.y;
+                }
                 (draggableAttr===TRUE) ? nodeTargetFn(e) : delegatedTargetFn(e, draggableAttr);
             }, '['+DD_MINUSDRAGGABLE+']');
 
@@ -584,6 +603,11 @@ module.exports = function (window) {
             var instance = this;
             if (!instance._inited) {
                 instance._setupMouseEv(); // engine behind the dragdrop-eventcycle
+                if (mobileEvents) {
+                    Event.before(['touchstart', 'touchmove'], function(ev) {
+                        (instance.ddProps.size()>0) && ev.preventDefault();
+                    });
+                }
                 Event.defineEvent('UI:'+DD_DROP)
                      .defaultFn(instance._defFnDrop.rbind(instance));
             }

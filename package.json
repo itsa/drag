@@ -31,6 +31,7 @@
         "polyfill": "itsa/polyfill",
         "utils": "itsa/utils",
         "js-ext": "itsa/js-ext",
+        "useragent": "itsa/useragent",
         "vdom": "itsa/vdom",
         "window-ext": "itsa/window-ext"
     },
