@@ -23,6 +23,9 @@
         "draganddrop"
     ],
     "main": "drag.js",
+    "browserify": {
+        "transform": ["cssify"]
+    },
     "engines": {
         "node": "*"
     },
