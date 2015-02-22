@@ -77,13 +77,14 @@ module.exports = function (window) {
     }
 
     var Event = require('event-dom')(window),
-        nodePlugin = require('vdom')(window).Plugins.nodePlugin,
         isMobile = require('useragent')(window).isMobile,
-        bodyNode = window.document.body,
+        DOCUMENT = window.document,
+        bodyNode = DOCUMENT.body,
         supportHammer = !!Event.Hammer,
         mobileEvents = supportHammer && isMobile,
         DD, DD_Object;
 
+    require('vdom')(window);
     require('window-ext')(window);
 
     DD = {
@@ -241,7 +242,7 @@ module.exports = function (window) {
             customEvent = e.emitter + ':'+DD_DRAG;
             console.log(NAME, '_defFnStart: default function UI:dd-start. Defining customEvent '+customEvent);
             Event.defineEvent(customEvent).defaultFn(instance._defFnDrag.bind(instance));
-            window.document.getAll('.'+DD_MASTER_CLASS).removeClass(DD_MASTER_CLASS);
+            DOCUMENT.getAll('.'+DD_MASTER_CLASS).removeClass(DD_MASTER_CLASS);
             instance._initializeDrag(e);
         },
 
@@ -641,7 +642,14 @@ module.exports = function (window) {
     DD_Object = window._ITSAmodules.Drag = {
         DD: DD,
         Plugins: {
-            nodeDD: nodePlugin.definePlugin('dd', {draggable: 'true'})
+            nodeDD: DOCUMENT.definePlugin('dd', null, {
+                attrs: {
+                    draggable: 'string'
+                },
+                defaults: {
+                    draggable: 'true'
+                }
+            })
         }
     };
 
