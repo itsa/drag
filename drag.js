@@ -77,13 +77,15 @@ module.exports = function (window) {
     }
 
     var Event = require('event-dom')(window),
-        nodePlugin = require('vdom')(window).Plugins.nodePlugin,
         isMobile = require('useragent')(window).isMobile,
-        bodyNode = window.document.body,
+        DOCUMENT = window.document,
+        bodyNode = DOCUMENT.body,
         supportHammer = !!Event.Hammer,
         mobileEvents = supportHammer && isMobile,
         DD, DD_Object;
 
+    require('vdom')(window);
+    require('node-plugin')(window);
     require('window-ext')(window);
 
     DD = {
@@ -215,7 +217,7 @@ module.exports = function (window) {
             PLUGIN_ATTRS.forEach(function(attribute) {
                 var data = '_del_'+attribute;
                 if (dragNode.getData(data)) {
-                    dragNode.removeAttr(attribute);
+                    delete dragNode.plugin.dd.model[attribute];
                     dragNode.removeData(data);
                 }
             });
@@ -241,7 +243,7 @@ module.exports = function (window) {
             customEvent = e.emitter + ':'+DD_DRAG;
             console.log(NAME, '_defFnStart: default function UI:dd-start. Defining customEvent '+customEvent);
             Event.defineEvent(customEvent).defaultFn(instance._defFnDrag.bind(instance));
-            window.document.getAll('.'+DD_MASTER_CLASS).removeClass(DD_MASTER_CLASS);
+            DOCUMENT.getAll('.'+DD_MASTER_CLASS).removeClass(DD_MASTER_CLASS);
             instance._initializeDrag(e);
         },
 
@@ -557,7 +559,7 @@ module.exports = function (window) {
                     }
                 );
                 if (foundNode) {
-                    e.currentTarget = container;
+                    // e.currentTarget = container;
                     e.target = foundNode;
                     // Mark the delegated node, so it has the same style as [draggable]:
                     foundNode.setClass(DEL_DRAGGABLE);
@@ -567,7 +569,7 @@ module.exports = function (window) {
                         var attr = container.getAttr(attribute);
                         if (attr && !foundNode.hasAttr(attribute)) {
                             foundNode.setData('_del_'+attribute, attr);
-                            foundNode.setAttr(attribute, attr);
+                            foundNode.plugin.dd.model[attribute] = attr;
                         }
                     });
                     nodeTargetFn(e);
@@ -641,7 +643,17 @@ module.exports = function (window) {
     DD_Object = window._ITSAmodules.Drag = {
         DD: DD,
         Plugins: {
-            nodeDD: nodePlugin.definePlugin('dd', {draggable: 'true'})
+            DD: DOCUMENT.definePlugin('dd', null, {
+                attrs: {
+                    draggable: 'string',
+                    constrain: 'string',
+                    handle: 'string',
+                    emitter: 'string'
+                },
+                defaults: {
+                    draggable: 'true'
+                }
+            })
         }
     };
 
