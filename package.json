@@ -35,7 +35,7 @@
         "utils": "itsa/utils",
         "js-ext": "itsa/js-ext",
         "useragent": "itsa/useragent",
-        "node-plugin": "node-plugin",
+        "node-plugin": "itsa/node-plugin",
         "vdom": "itsa/vdom",
         "window-ext": "itsa/window-ext"
     },
