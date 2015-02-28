@@ -217,7 +217,7 @@ module.exports = function (window) {
             PLUGIN_ATTRS.forEach(function(attribute) {
                 var data = '_del_'+attribute;
                 if (dragNode.getData(data)) {
-                    delete dragNode.plugin.dd.model[attribute];
+                    delete dragNode._plugin.dd.model[attribute];
                     dragNode.removeData(data);
                 }
             });
@@ -569,7 +569,8 @@ module.exports = function (window) {
                         var attr = container.getAttr(attribute);
                         if (attr && !foundNode.hasAttr(attribute)) {
                             foundNode.setData('_del_'+attribute, attr);
-                            foundNode.plugin.dd.model[attribute] = attr;
+                            foundNode.setAttr(attribute, attr);
+                            // foundNode._plugin.dd.model[attribute] = attr;
                         }
                     });
                     nodeTargetFn(e);
