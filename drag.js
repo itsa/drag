@@ -82,7 +82,7 @@ module.exports = function (window) {
         bodyNode = DOCUMENT.body,
         supportHammer = !!Event.Hammer,
         mobileEvents = supportHammer && isMobile,
-        DD, DD_Object;
+        DD;
 
     require('vdom')(window);
     require('node-plugin')(window);
@@ -217,7 +217,7 @@ module.exports = function (window) {
             PLUGIN_ATTRS.forEach(function(attribute) {
                 var data = '_del_'+attribute;
                 if (dragNode.getData(data)) {
-                    delete dragNode.plugin.dd.model[attribute];
+                    delete dragNode._plugin.dd.model[attribute];
                     dragNode.removeData(data);
                 }
             });
@@ -569,7 +569,8 @@ module.exports = function (window) {
                         var attr = container.getAttr(attribute);
                         if (attr && !foundNode.hasAttr(attribute)) {
                             foundNode.setData('_del_'+attribute, attr);
-                            foundNode.plugin.dd.model[attribute] = attr;
+                            foundNode.setAttr(attribute, attr);
+                            // foundNode._plugin.dd.model[attribute] = attr;
                         }
                     });
                     nodeTargetFn(e);
@@ -640,22 +641,18 @@ module.exports = function (window) {
 
     };
 
-    DD_Object = window._ITSAmodules.Drag = {
-        DD: DD,
-        Plugins: {
-            DD: DOCUMENT.definePlugin('dd', null, {
-                attrs: {
-                    draggable: 'string',
-                    constrain: 'string',
-                    handle: 'string',
-                    emitter: 'string'
-                },
-                defaults: {
-                    draggable: 'true'
-                }
-            })
+    DOCUMENT.definePlugin('dd', null, {
+        attrs: {
+            draggable: 'string',
+            handle: 'string',
+            emitter: 'string'
+        },
+        defaults: {
+            draggable: 'true'
         }
-    };
+    });
 
-    return DD_Object;
+    window._ITSAmodules.Drag = DD;
+
+    return DD;
 };
