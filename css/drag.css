@@ -1,5 +1,6 @@
 [dd-draggable] {
     -moz-user-select: none;
+    -ms-user-select: none;
     -khtml-user-select: none;
     -webkit-user-select: none;
     user-select: none;
@@ -20,7 +21,7 @@
     transition: top 0.25s ease-out, left 0.25s ease-out;
 }
 .dd-high-z {
-    z-index: 999 !important;
+    z-index: 3001 !important;
 }
 .dd-opacity {
     opacity: 0.6;
