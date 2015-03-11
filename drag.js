@@ -644,7 +644,7 @@ module.exports = function (window) {
 
     // don't drag when the cursor is above an input, text, or editable element:
     Event.before(
-        '*:dd',
+        '*:'+DD_DRAG,
         function(e) {
             e.preventDefault();
         },
