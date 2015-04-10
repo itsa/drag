@@ -183,9 +183,12 @@ module.exports = function (window) {
                     ddProps.constrain.x = ddProps.constrain.xOrig - constrainNode.scrollLeft;
                     ddProps.constrain.y = ddProps.constrain.yOrig - constrainNode.scrollTop;
                 }
-
-                x = ddProps.x+e.xMouse+(winConstrained ? ddProps.winScrollLeft : window.getScrollLeft())-e.xMouseOrigin;
-                y = ddProps.y+e.yMouse+(winConstrained ? ddProps.winScrollTop : window.getScrollTop())-e.yMouseOrigin;
+                if (ddProps.xMovable) {
+                    x = ddProps.x+e.xMouse+(winConstrained ? ddProps.winScrollLeft : window.getScrollLeft())-e.xMouseOrigin;
+                }
+                if (ddProps.yMovable) {
+                    y = ddProps.y+e.yMouse+(winConstrained ? ddProps.winScrollTop : window.getScrollTop())-e.yMouseOrigin;
+                }
 
                 dragNode.setXY(x, y, ddProps.constrain, true);
 
@@ -280,6 +283,7 @@ module.exports = function (window) {
             var instance = this,
                 dragNode = e.target,
                 constrain = dragNode.getAttr(CONSTRAIN_ATTR),
+                direction = dragNode.getAttr('direction').toLowerCase(),
                 ddProps = instance.ddProps,
                 emitterName = e.emitter,
                 moveEv, x, y, byExactId, match, constrainNode, winConstrained, winScrollLeft, winScrollTop,
@@ -287,6 +291,8 @@ module.exports = function (window) {
 
             // define ddProps --> internal object with data about the draggable instance
             ddProps.dragNode = dragNode;
+            ddProps.xMovable = (direction==='xy') || (direction==='x');
+            ddProps.yMovable = (direction==='xy') || (direction==='y');
             ddProps.x = x = dragNode.left;
             ddProps.y = y = dragNode.top;
             ddProps.inlineLeft = dragNode.getInlineStyle(LEFT);
@@ -659,10 +665,12 @@ module.exports = function (window) {
         attrs: {
             draggable: 'string',
             handle: 'string',
+            direction: 'string',
             emitter: 'string'
         },
         defaults: {
-            draggable: 'true'
+            draggable: 'true',
+            direction: 'xy'
         }
     });
 
