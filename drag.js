@@ -62,7 +62,8 @@ var NAME = '[drag]: ',
     TRUE = 'true',
     NO_OVERFLOW = 'itsa-no-overflow',
     DD_MINUSDRAGGABLE = DD_MINUS+DRAGGABLE,
-    PLUGIN_ATTRS = [DD_MINUS+DROPZONE, CONSTRAIN_ATTR, DD_EMITTER, DD_HANDLE, DD_EFFECT_ALLOWED, DD_DROPZONE_MOVABLE];
+    DIRECTION_ATTR = DD_MINUS+'direction',
+    PLUGIN_ATTRS = [DD_MINUS+DROPZONE, CONSTRAIN_ATTR, DD_EMITTER, DD_HANDLE, DD_EFFECT_ALLOWED, DD_DROPZONE_MOVABLE, DIRECTION_ATTR];
 
 require('polyfill');
 require('js-ext');
@@ -283,7 +284,7 @@ module.exports = function (window) {
             var instance = this,
                 dragNode = e.target,
                 constrain = dragNode.getAttr(CONSTRAIN_ATTR),
-                direction = dragNode.getAttr('direction').toLowerCase(),
+                direction = dragNode.getAttr(DIRECTION_ATTR).toLowerCase(),
                 ddProps = instance.ddProps,
                 emitterName = e.emitter,
                 moveEv, x, y, byExactId, match, constrainNode, winConstrained, winScrollLeft, winScrollTop,
