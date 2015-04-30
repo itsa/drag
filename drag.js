@@ -63,6 +63,7 @@ var NAME = '[drag]: ',
     NO_OVERFLOW = 'itsa-no-overflow',
     DD_MINUSDRAGGABLE = DD_MINUS+DRAGGABLE,
     DIRECTION_ATTR = DD_MINUS+'direction',
+    PLUGINTRUE = '[plugin-dd="true"]',
     PLUGIN_ATTRS = [DD_MINUS+DROPZONE, CONSTRAIN_ATTR, DD_EMITTER, DD_HANDLE, DD_EFFECT_ALLOWED, DD_DROPZONE_MOVABLE, DIRECTION_ATTR];
 
 require('polyfill');
@@ -83,11 +84,17 @@ module.exports = function (window) {
         bodyNode = DOCUMENT.body,
         supportHammer = !!Event.Hammer,
         mobileEvents = supportHammer && isMobile,
-        DD;
+        DD, noScrollOnDrag;
 
     require('vdom')(window);
     require('node-plugin')(window);
     require('window-ext')(window);
+
+    noScrollOnDrag = function(e) {
+        if (e.target.matches(PLUGINTRUE) || e.target.inside(PLUGINTRUE)) {
+            e.preventDefault();
+        }
+    };
 
     DD = {
         /**
@@ -584,6 +591,25 @@ module.exports = function (window) {
                     nodeTargetFn(e);
                 }
             };
+
+            Event.after(mobileEvents ? PANSTART : MOUSEDOWN, function(e) {
+                var draggableAttr = e.target.getAttr(DD_MINUSDRAGGABLE);
+                if (typeof e.center==='object') {
+                    e.clientX = e.center.x;
+                    e.clientY = e.center.y;
+                }
+                (draggableAttr===TRUE) ? nodeTargetFn(e) : delegatedTargetFn(e, draggableAttr);
+            }, '['+DD_MINUSDRAGGABLE+']');
+
+            // prevent default behaviour on scrolling: otherwise mobile devices will scroll instead of drag:
+            // scrollPreventListener = Event.before('panstart', function(e) {e.preventDefaultContinue();});
+            // scrollPreventListener = Event.before('touchmove', function(e) {e.preventDefault();});
+
+            if (mobileEvents) {
+                DOCUMENT.addEventListener('touchstart', noScrollOnDrag);
+                DOCUMENT.addEventListener('touchmove', noScrollOnDrag);
+            }
+
             Event.after(mobileEvents ? PANSTART : MOUSEDOWN, function(e) {
                 var draggableAttr = e.target.getAttr(DD_MINUSDRAGGABLE);
                 if (typeof e.center==='object') {
@@ -608,11 +634,6 @@ module.exports = function (window) {
             var instance = this;
             if (!instance._inited) {
                 instance._setupMouseEv(); // engine behind the dragdrop-eventcycle
-                if (mobileEvents) {
-                    Event.before(['touchstart', 'touchmove'], function(ev) {
-                        (instance.ddProps.size()>0) && ev.preventDefault();
-                    });
-                }
                 Event.defineEvent('UI:'+DD_DROP)
                      .defaultFn(instance._defFnDrop.rbind(instance));
             }
@@ -661,6 +682,17 @@ module.exports = function (window) {
             return (tagName==='INPUT') || (tagName==='TEXTAREA') || (sourceNode.getAttr('contenteditable')==='true');
         }
     );
+
+    // don't drag any native drag-drop items when they are part of dd, because they prevent they corrupt dragging:
+    Event.before('dragstart',
+        function (e) {
+            e.preventDefault();
+        },
+        function(e) {
+            return e.target.matches(PLUGINTRUE) || e.target.inside(PLUGINTRUE);
+        }
+    );
+
 
     DOCUMENT.definePlugin('dd', null, {
         attrs: {
