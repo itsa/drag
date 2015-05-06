@@ -609,16 +609,6 @@ module.exports = function (window) {
                 DOCUMENT.addEventListener('touchstart', noScrollOnDrag);
                 DOCUMENT.addEventListener('touchmove', noScrollOnDrag);
             }
-
-            Event.after(mobileEvents ? PANSTART : MOUSEDOWN, function(e) {
-                var draggableAttr = e.target.getAttr(DD_MINUSDRAGGABLE);
-                if (typeof e.center==='object') {
-                    e.clientX = e.center.x;
-                    e.clientY = e.center.y;
-                }
-                (draggableAttr===TRUE) ? nodeTargetFn(e) : delegatedTargetFn(e, draggableAttr);
-            }, '['+DD_MINUSDRAGGABLE+']');
-
         },
 
        /**
